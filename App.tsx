@@ -1,40 +1,67 @@
-// src/App.tsx
 import React, { useState } from "react";
-import {
-  createSkill,
-  addValidation,
-  getSkills,
-  executeSkill,
-  manualApprove,
-} from "./Nova";
 
-const initial = (() => {
-  if (getSkills().length === 0) {
-    createSkill("memory-rollback", 2);
-  }
-  return getSkills();
-})();
+type Status = "pending" | "approved" | "executed";
 
-export default function App() {
-  const [skills, setSkills] = useState(initial);
+export default function App(): JSX.Element {
+  const [ai1Approved, setAi1Approved] = useState(false);
+  const [ai2Approved, setAi2Approved] = useState(false);
+  const [status, setStatus] = useState<Status>("pending");
 
-  const refresh = () => setSkills(getSkills());
-
-  const handleAIApprove = (skillName: string, agent = "AI-1") => {
-    try {
-      addValidation(skillName, agent, "approved");
-      refresh();
-    } catch (e) {
-      alert((e as Error).message);
+  const tryApprove = (which: 1 | 2) => {
+    if (which === 1) setAi1Approved(true);
+    if (which === 2) setAi2Approved(true);
+    if ((which === 1 && ai2Approved) || (which === 2 && ai1Approved)) {
+      setStatus("approved");
     }
   };
 
-  const handleExecute = (skillName: string) => {
-    try {
-      executeSkill(skillName);
-      refresh();
-    } catch (e) {
-      alert((e as Error).message);
+  const execute = () => {
+    if (status !== "approved") return alert("Both AIs must approve first.");
+    setStatus("executed");
+  };
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <h1>Multi-AI Validation Demo</h1>
+
+      <div style={{ marginBottom: 12 }}>
+        <strong>Skill status:</strong>{" "}
+        <span style={{ textTransform: "capitalize" }}>{status}</span>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <button
+          onClick={() => tryApprove(1)}
+          disabled={ai1Approved}
+          style={{ padding: "8px 12px" }}
+        >
+          {ai1Approved ? "AI-1 Approved" : "AI-1 Approve"}
+        </button>
+
+        <button
+          onClick={() => tryApprove(2)}
+          disabled={ai2Approved}
+          style={{ padding: "8px 12px" }}
+        >
+          {ai2Approved ? "AI-2 Approved" : "AI-2 Approve"}
+        </button>
+
+        <button
+          onClick={execute}
+          disabled={status !== "approved"}
+          style={{ padding: "8px 12px" }}
+        >
+          Execute
+        </button>
+      </div>
+
+      <div>
+        <strong>Approvals:</strong>{" "}
+        <span>AI-1: {ai1Approved ? "✅" : "❌"}; AI-2: {ai2Approved ? "✅" : "❌"}</span>
+      </div>
+    </div>
+  );
+        }      alert((e as Error).message);
     }
   };
 
